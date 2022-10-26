@@ -48,7 +48,7 @@ class Pieces{
     constructor(shape,ctx){
         this.shape=shape;
         this.ctx=ctx;
-        this.y=0;
+        this.y=-1;
         this.x=Math.floor(cols/2);
     }
     renderPiece(){
@@ -56,17 +56,10 @@ class Pieces{
             row.map((cell,j)=>{
                 if(cell!==0){
                     this.ctx.fillStyle=colors[cell];
-                    this.ctx.fillRect(this.x+j,this.i+i,1,1)
+                    this.ctx.fillRect(this.x+j,this.y+i,1,1)
                 }
             })
         })
-    }
-    renderGameState(){
-        for(let i=0;i<this.grid.length;i++){
-            for(let j=0;j<this.grid[i].length;j++){
-
-            }
-        }
     }
 }
 class GameModel{
@@ -86,12 +79,32 @@ class GameModel{
         }
         return grid
     }
+    collision(x,y,candidate=null){
+        const shape=candidate||this.fallingPiece.shape;
+        const n=shape.length;
+        for(let i=0;i<n;i++){
+            for(let j=0;j<n;j++){
+                if(shape[i][j]!==0){
+                    let p=x+j;
+                    let q=y+i;
+                    if(p>=0&&p<cols&&q<rows){
+                        if(this.grid[q][p]>0){
+                            return true
+                        }
+                    }else{
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
     renderGameState(){
-        for(let i=0;i<this.grid;i++){
-            for(let j=0;j<this.grid[i];j++){
+        for(let i=0;i<this.grid.length;i++){
+            for(let j=0;j<this.grid[i].length;j++){
                 let cell=this.grid[i][j];
-                this.ctx.fillStyle.color(cell);
-                this.fillRect(j,i,1,1)
+                this.ctx.fillStyle=colors[cell];
+                this.ctx.fillRect(j,i,1,1)
             }
         }
         if(this.fallingPiece!==null){
@@ -100,11 +113,29 @@ class GameModel{
     }
     moveDown(){
         if(this.fallingPiece===null){
-            this.renderGameState();
-            return
+            this.renderGameState()
+        }else if(this.collision(this.fallingPiece.x,this.fallingPiece.y+1)){
+            const shape=this.fallingPiece.shape;
+            const x=this.fallingPiece.x;
+            const y=this.fallingPiece.y;
+            shape.map((row,i)=>{
+                row.map((cell,j)=>{
+                    let p=x+j;
+                    let q=y+i;
+                    if(p>=0&&p<cols&&q<rows&&cell>0){
+                        this.grid[q][p]=shape[i][j];
+                    }
+                })
+            });
+            if(this.fallingPiece.y===0){
+                alert('Game Over');
+                this.grid=this.makeStartingGrid();
+            }
+            this.fallingPiece=null;
         }else{
-            this.renderGameState();
+            this.fallingPiece.y+=1;
         }
+        this.renderGameState();
     }
 }
 ctx.scale(32,32);
@@ -134,9 +165,7 @@ function fullSend(){
     }
     for(let i=0;i<model.grid.length;i++){
         if(allFilled(model.grid[i])){
-            // console.log('hola')
-        }else{
-            // console.log('adhios');
+            
         }
     }
 }
