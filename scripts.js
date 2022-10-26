@@ -137,6 +137,38 @@ class GameModel{
         }
         this.renderGameState();
     }
+    move(right){
+        if(this.fallingPiece===null){
+            return
+        }
+        let x=this.fallingPiece.x;
+        let y=this.fallingPiece.y;
+        if(right){
+            if(!this.collision(x+1,y)){
+                this.fallingPiece.x+=1;
+            }
+        }else{
+            if(!this.collision(x-1,y)){
+                this.fallingPiece.x-=1;
+            }
+        }
+        this.renderGameState()
+    }
+    rotate(){
+        if(this.fallingPiece!==null){
+            let shape=[...this.fallingPiece.shape.map((row)=>[...row])];
+            for(let y=0;y<shape.length;++y){
+                for(let x=0;x<y;++x){
+                    [shape[x][y],shape[y][x]]=[shape[y][x],shape[x][y]];
+                }
+            }
+            shape.forEach((row=>row.reverse()));
+            if(!this.collision(this.fallingPiece.x,this.fallingPiece.y,shape)){
+                this.fallingPiece.shape=shape;
+            }
+        }
+        this.renderGameState()
+    }
 }
 ctx.scale(32,32);
 const model=new GameModel(ctx)
@@ -169,3 +201,19 @@ function fullSend(){
         }
     }
 }
+document.addEventListener('keydown',(e)=>{
+    e.preventDefault()
+    switch(e.key){
+        case 'w':
+            model.rotate();
+            break;
+        case 'd':
+            model.move(true);
+            break;
+        case 's':
+            model.moveDown();
+        case 'a':
+            model.move(false);
+            break;
+    }
+})
